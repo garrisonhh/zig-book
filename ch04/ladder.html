@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Ladder</title>
+</head>
+
+<style>
+    :root {
+        --onyx: #403F4C;
+        --red: #E84855;
+        --azure: #3185FC;
+        --green: #2EC4B6;
+    }
+
+    * {
+        font-family: monospace;
+    }
+
+    body,
+    html {
+        height: 100%;
+    }
+
+    body {
+        width: max(50%, 320px);
+    }
+
+    html,
+    body,
+    div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #content {
+        width: max-content;
+        gap: 10px;
+    }
+
+    h1 {
+        border-bottom: 5px dotted var(--azure);
+        font-size: 64px;
+    }
+
+    #words {
+        width: 100%;
+        background-color: var(--green);
+        border: 2px solid var(--onyx);
+        border-radius: 10px;
+        padding: 5px;
+        gap: 10px;
+    }
+
+    #words>div {
+        font-size: 30px;
+    }
+
+    #input {
+        flex-direction: row;
+
+        width: 100%;
+        background-color: var(--azure);
+        border: 2px solid var(--onyx);
+        border-radius: 10px;
+        padding: 5px;
+        gap: 5px;
+    }
+
+    #input * {
+        font-size: 30px;
+    }
+
+    #errors>div {
+        font-size: 30px;
+        width: 100%;
+        border: 2px solid var(--red);
+        border-radius: 10px;
+    }
+</style>
+
+<body>
+    <h1 id="title">Word Ladder</h1>
+    <div id="content">
+        <div id="words"></div>
+        <div id="input">
+            <label for="word">next word:</label>
+            <input id="word-input" name="word" type="text">
+        </div>
+        <div id="errors"></div>
+    </div>
+</body>
+
+<script>
+    function addWord(word) {
+        const wordDiv = document.createElement("div");
+        wordDiv.innerText = word;
+
+        document.querySelector('#words').appendChild(wordDiv);
+    }
+
+    addEventListener('load', async () => {
+        // generate random first word
+        const firstWord = await fetch('/first')
+            .then(res => res.text());
+
+        addWord(firstWord);
+
+    });
+
+    document.querySelector('#word-input').addEventListener('keydown', async (e) => {
+        if (e.key !== 'Enter') return;
+
+        const errors = document.querySelector('#errors');
+        errors.replaceChildren();
+
+        const ladder = Array.from(document.querySelector('#words').children)
+            .map((el) => el.innerText)
+            .join('\n');
+
+        const proposed = e.target.value;
+
+        const res = await fetch('/ladder', {
+            method: 'POST',
+            body: `${ladder}\n${proposed}`,
+        });
+
+        if (res.status == 200) {
+            e.target.value = "";
+            addWord(proposed);
+            e.target.scrollIntoView();
+        } else {
+            const err_msg = await res.text();
+            const err = document.createElement('div');
+            err.innerText = `uh oh: ${err_msg}`;
+
+            errors.appendChild(err);
+            errors.scrollIntoView();
+        }
+    });
+</script>
+
+</html>
