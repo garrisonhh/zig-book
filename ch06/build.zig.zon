@@ -1,0 +1,20 @@
+.{
+    .name = .chip8,
+    .version = "0.0.0",
+    .dependencies = .{
+        .raylib = .{
+            .url = "https://github.com/raysan5/raylib/archive/7553e9d58640ba0c3a2fc185a9cb458f00fae06e.tar.gz",
+            .hash = "raylib-5.6.0-dev-whq8uJZFCgW4Z4fpvKFfmSsBHJc61bCkFeocDv28uk8H",
+        },
+    },
+    .fingerprint = 0xa61914ab648832ee, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.15.2",
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        // For example...
+        //"LICENSE",
+        //"README.md",
+    },
+}
