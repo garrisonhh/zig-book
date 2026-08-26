@@ -1,0 +1,7 @@
+.{
+    .name = .glfw_opengl,
+    .version = "0.15.2",
+    .dependencies = .{},
+    .paths = .{""},
+    .fingerprint = 0xa5bb4318938379be,
+}

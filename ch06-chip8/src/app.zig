@@ -20,7 +20,7 @@ pub fn main() !void {
 
     display.clear();
 
-    c.InitWindow(640, 320, "chip8 console");
+    c.InitWindow(960, 480, "chip8 console");
     defer c.CloseWindow();
     c.SetTargetFPS(60);
 
@@ -31,6 +31,10 @@ pub fn main() !void {
     defer c.UnloadSound(sound);
 
     while (!c.WindowShouldClose()) {
+        if (c.IsKeyPressed(c.KEY_F2)) {
+            c.TakeScreenshot("chip8-screenshot.png");
+        }
+
         // update keypad
         for (keypad_keys, 0..) |key, i| {
             keypad.keys[i] = c.IsKeyPressed(key);
