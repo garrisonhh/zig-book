@@ -1,9 +1,7 @@
 const std = @import("std");
 const vm = @import("vm");
 
-const c = @cImport({
-    @cInclude("raylib.h");
-});
+const c = @import("raylib");
 
 const keypad_keys = [16]c_int{
     c.KEY_KP_0, c.KEY_KP_1, c.KEY_KP_2,   c.KEY_KP_3,
@@ -17,6 +15,7 @@ pub fn main() !void {
     var display: vm.Display = undefined;
     var memory: vm.Memory = undefined;
     try memory.loadProgram(@embedFile("programs/kaleidoscope.ch8"));
+    var prng: std.Random.DefaultPrng = .init(0xDEADBEEF);
 
     display.clear();
 
@@ -42,7 +41,7 @@ pub fn main() !void {
 
         // run vm
         for (0..1000) |_| {
-            vm.step(&memory, &display, &keypad) catch |e| {
+            vm.step(prng.random(), &memory, &display, &keypad) catch |e| {
                 if (e != error.UnknownInstruction) return e;
                 const bytecode = try memory.readBytes(memory.pc - 2, 2);
                 const op: u16 = (@as(u16, bytecode[0]) << 8) + bytecode[1];

@@ -1,6 +1,4 @@
-const c = @cImport({
-    @cInclude("raylib.h");
-});
+const c = @import("raylib");
 
 pub fn main() !void {
     c.InitWindow(640, 480, "hello, blank window!");

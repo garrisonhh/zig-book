@@ -8,14 +8,16 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    const raylib_lib = raylib.artifact("raylib");
 
     const app_mod = b.createModule(.{
         .root_source_file = b.path("src/app.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "raylib", .module = raylib.module("raylib") },
+        },
     });
-    app_mod.linkLibrary(raylib_lib);
+    app_mod.linkLibrary(raylib.artifact("raylib"));
 
     const app = b.addExecutable(.{
         .name = "hello-window",

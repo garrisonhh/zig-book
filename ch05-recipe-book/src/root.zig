@@ -40,11 +40,11 @@ pub const RecipeBook = struct {
     fn dupeCString(self: *Self, cstr: [*:0]const u8) Allocator.Error![:0]const u8 {
         const arena_ally = self.string_arena.allocator();
         const slice = std.mem.span(cstr);
-        return try arena_ally.dupeZ(u8, slice);
+        return try arena_ally.dupeSentinel(u8, slice, 0);
     }
 
     fn createRecipe(self: *Self, ally: Allocator, recipe: Recipe) Allocator.Error!RecipeId {
-        const id: RecipeId = @enumFromInt(self.next_recipe_num);
+        const id: RecipeId = @fromBackingInt(@intCast(self.next_recipe_num));
         try self.recipes.put(ally, id, recipe);
         self.next_recipe_num += 1;
         return id;
@@ -168,10 +168,13 @@ pub const RecipeBook = struct {
     }
 };
 
+var threaded: std.Io.Threaded = .init_single_threaded;
 var gpa: std.heap.DebugAllocator(.{}) = .init;
 
 export fn recipes_quit() void {
+    threaded.deinit();
     _ = gpa.deinit();
+    threaded = .init_single_threaded;
     gpa = .init;
 }
 
@@ -282,7 +285,7 @@ export fn recipe_get(
         return translateErr(e);
     };
 
-    var ingredients_copy: std.ArrayList(RetrievedIngredient) = .{};
+    var ingredients_copy: std.ArrayList(RetrievedIngredient) = .empty;
     var ingredients = book.iterateIngredients(recipe_id);
     while (ingredients.next()) |ing| {
         ingredients_copy.append(buf_ally, .{
@@ -319,7 +322,7 @@ export fn recipe_iter_next(
     result: *RecipeId,
 ) bool {
     while (iter.recipe_num < iter.book.recipes.count()) {
-        const next_id: RecipeId = @enumFromInt(iter.recipe_num);
+        const next_id: RecipeId = @fromBackingInt(@intCast(iter.recipe_num));
         iter.recipe_num += 1;
 
         if (iter.book.recipes.contains(next_id)) {
@@ -336,15 +339,16 @@ export fn recipe_book_save(
     filename: [*:0]const u8,
 ) Success {
     const ally = gpa.allocator();
+    const io = threaded.io();
 
     const filename_span = std.mem.span(filename);
 
-    var file = std.fs.cwd().createFile(filename_span, .{}) catch {
+    var file = std.Io.Dir.cwd().createFile(io, filename_span, .{}) catch {
         return .file_error;
     };
-    defer file.close();
+    defer file.close(io);
     var writer_buf: [1024]u8 = undefined;
-    var file_writer = file.writer(&writer_buf);
+    var file_writer = file.writer(io, &writer_buf);
     const writer = &file_writer.interface;
 
     book.toJson(ally, writer) catch |e| return translateErr(e);
@@ -354,14 +358,15 @@ export fn recipe_book_save(
 }
 
 export fn recipe_book_load(filename: [*:0]const u8) ?*RecipeBook {
+    const io = threaded.io();
     const filename_span = std.mem.span(filename);
 
-    var file = std.fs.cwd().openFile(filename_span, .{
+    var file = std.Io.Dir.cwd().openFile(io, filename_span, .{
         .mode = .read_only,
     }) catch return null;
-    defer file.close();
+    defer file.close(io);
     var reader_buf: [1024]u8 = undefined;
-    var file_reader = file.reader(&reader_buf);
+    var file_reader = file.reader(io, &reader_buf);
     const reader = &file_reader.interface;
 
     const ally = gpa.allocator();
@@ -381,6 +386,7 @@ test {
 }
 
 test {
+    const io = threaded.io();
     defer recipes_quit();
 
     const book = recipe_book_create() orelse {
@@ -411,7 +417,7 @@ test {
     defer book2.deinit(std.testing.allocator);
 
     var writer_buf: [1024]u8 = undefined;
-    var file_writer = std.fs.File.stderr().writer(&writer_buf);
+    var file_writer = std.Io.File.stderr().writer(io, &writer_buf);
     const writer2 = &file_writer.interface;
     try book2.toJson(std.testing.allocator, writer2);
     try writer2.flush();

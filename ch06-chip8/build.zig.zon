@@ -3,12 +3,16 @@
     .version = "0.0.0",
     .dependencies = .{
         .raylib = .{
-            .url = "https://github.com/raysan5/raylib/archive/7553e9d58640ba0c3a2fc185a9cb458f00fae06e.tar.gz",
-            .hash = "raylib-5.6.0-dev-whq8uJZFCgW4Z4fpvKFfmSsBHJc61bCkFeocDv28uk8H",
+            .url = "https://github.com/raysan5/raylib/archive/30fa673ef2fa137588cf8b5732c65d76d86c1570.tar.gz",
+            .hash = "raylib-6.0.0-whq8uDuRNwU-qsXm4RFf0ZBx11T8CE-vPfzcgAgQ24UH",
+        },
+        .translate_c = .{
+            .url = "git+https://codeberg.org/ziglang/translate-c#9b5eb014df946d26b86c3d42b5d133d0fe48fe61",
+            .hash = "translate_c-0.0.0-Q_BUWu5OBwCBUFLkC6LVoVWssXLQG5E8NZvxu9XbaZ75",
         },
     },
     .fingerprint = 0xa61914ab648832ee, // Changing this has security and trust implications.
-    .minimum_zig_version = "0.15.2",
+    .minimum_zig_version = "0.17.0",
     .paths = .{
         "build.zig",
         "build.zig.zon",

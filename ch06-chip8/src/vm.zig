@@ -9,7 +9,7 @@ pub const Display = struct {
     pixels: [32][64]u1,
 
     pub fn clear(display: *Display) void {
-        @memset(&display.pixels, [1]u1{0} ** 64);
+        @memset(&display.pixels, @splat(0));
     }
 };
 
@@ -62,7 +62,7 @@ pub const Memory = struct {
         program: []const u8,
     ) error{WriteOutOfBounds}!void {
         try self.writeBytes(program_load_addr, program);
-        try self.writeBytes(font_load_addr, &font_data);
+        try self.writeBytes(font_load_addr, font_data);
         self.pc = program_load_addr;
         self.sp = 0;
         self.dt = 0;
@@ -85,7 +85,7 @@ pub const Error = error{
     InitPrngFailed,
 };
 
-pub fn step(memory: *Memory, display: *Display, keypad: *Keypad) Error!void {
+pub fn step(random: std.Random, memory: *Memory, display: *Display, keypad: *Keypad) Error!void {
     // read next instruction
     const bytecode = try memory.readBytes(memory.pc, 2);
     memory.pc += 2;
@@ -203,15 +203,7 @@ pub fn step(memory: *Memory, display: *Display, keypad: *Keypad) Error!void {
         },
         0xC => {
             // set var to random byte with const mask
-            if (!prng_initialized) {
-                var seed: u64 = undefined;
-                std.posix.getrandom(std.mem.asBytes(&seed)) catch {
-                    return error.InitPrngFailed;
-                };
-                prng = .init(seed);
-            }
-
-            const rand_val = prng.random().int(u8);
+            const rand_val = random.int(u8);
             memory.vars[nibbles[1]] = rand_val & bytecode[1];
         },
         0xD => {
